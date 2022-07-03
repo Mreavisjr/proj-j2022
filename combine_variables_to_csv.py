@@ -1,4 +1,3 @@
-from ast import parse
 import pandas as pd
 import os
 
@@ -67,20 +66,22 @@ for f in os.listdir(ind_path):
         ind_data = ind_data.merge(df, on=["date"], how="outer")
     elif f.startswith("rate"):
         df = pd.read_csv(os.path.join(ind_path, f))
+        # print(df.head(10:20))
         df = df.melt(id_vars="Year", value_vars=df.columns[1:13])
+        # print(df.head(10:20))
         df = df.rename(
-            columns={"Year": "year", "variable": "month", "value": "interest_rate"}
+            columns={"Year": "year", "variable": "month", "value": "rate_of_inflation"}
         )
         dates = (
             df.iloc[:, :2].join(pd.Series("01", index=df.index, name="day")).astype(str)
         )
         dates["date"] = dates.year + dates.month + dates.day
         df["date"] = pd.to_datetime(dates["date"], format="%Y%b%d")
-        df["date"] = pd.to_datetime(dates["date"], format="%Y%b%d")
-        ind_data = ind_data.merge(df[["date", "interest_rate"]], on="date")
+        ind_data = ind_data.merge(
+            df[["date", "rate_of_inflation"]], on="date", how="outer"
+        )
     else:
         print(f"{f} was not parsed.")
-
 
 ind_data = ind_data.sort_values(by="date").reset_index(drop=True)
 ind_data.dropna(subset=["date"], how="all", inplace=True)
